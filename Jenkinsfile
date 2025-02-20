@@ -2,12 +2,12 @@ pipeline {
     agent any
     
     triggers {
-        cron('H/3 * * 4 *') 
+        cron('H/3 * * 4 *')
     }
     
     tools {
-          maven 'M3'      
-    jdk 'JDK17'     
+        maven 'M3'
+        jdk 'JDK17'
     }
     
     stages {
@@ -19,7 +19,11 @@ pipeline {
         
         stage('Build and Test') {
             steps {
-                sh 'mvn clean verify'
+               
+                bat 'mvn clean verify'
+                
+        
+                junit '**/target/surefire-reports/*.xml'
             }
         }
         
@@ -36,7 +40,9 @@ pipeline {
     }
     
     post {
-        always {
+        success {
+            archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+            
             publishHTML(target: [
                 allowMissing: false,
                 alwaysLinkToLastBuild: false,
@@ -45,6 +51,10 @@ pipeline {
                 reportFiles: 'index.html',
                 reportName: 'JaCoCo Coverage Report'
             ])
+        }
+        
+        failure {
+            echo 'Pipeline failed! Please check the logs for details.'
         }
     }
 }
